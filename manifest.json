@@ -1,0 +1,26 @@
+{
+    "manifest_version": 2,
+    "name": "Crunchyroll Episode Tracker",
+    "version": "1.0",
+  
+    "description": "tracks crunchyroll episodes",
+
+    "background": {
+      "scripts": ["background.js"]
+    },
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.crunchyroll.com/*"],
+        "js": ["scripts/crunchyroll_episode_tracker.js"],
+        "run_at": "document_idle"
+      }
+    ],
+
+    "permissions": [
+      "activeTab",
+      "cookies",
+      "notifications"
+    ]
+  }
+  
