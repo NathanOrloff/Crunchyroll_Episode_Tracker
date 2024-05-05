@@ -1,3 +1,4 @@
+var series = "";
 
 /**
  * Logs id of tab created
@@ -17,19 +18,25 @@ function onError(error) {
 
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // create browser notification with information sent
-    browser.notifications.create({
-        type: "basic",
-        title: `Latest ${request.series} episode watched:`,
-        message: request.episode
-    });
+    if (request.type == "getSeries" ) {
+        sendResponse({ type: request.type, data: series });
+    } else if (request.type == "setSeries") {
+        series = request.data;
+    } else if (request.type == "createNotification") {
 
-    // on notification clicked, create new tab
-    browser.notifications.onClicked.addListener(() => {
-        let creating = browser.tabs.create({
-            url: request.link,
+        // create browser notification with information sent
+        browser.notifications.create({
+            type: "basic",
+            title: `Latest ${request.data.series} episode watched:`,
+            message: request.data.episode
         });
-        creating.then(onCreated, onError);
-    });
-    sendResponse({ response: "success" });
+
+        // on notification clicked, create new tab
+        browser.notifications.onClicked.addListener(() => {
+            let creating = browser.tabs.create({
+                url: request.data.link,
+            });
+            creating.then(onCreated, onError);
+        });
+    }
 });

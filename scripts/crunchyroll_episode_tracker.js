@@ -8,12 +8,24 @@ const LOAD_TIMEOUT = 500;
 const COOKIE_EXPIRE_DAYS = 365;
 const COOKIE_BASE_NAME = "cr_episode_tracker"
 
+// background script request types
+const GET_SERIES = "getSeries";
+const SET_SERIES = "setSeries";
+const CREATE_NOTIFICATION = "createNotification";
+
 /**
  * Logs the response from the background
  * @param {Object} message JSON response object returned from background
  */
 function handleResponse(message) {
-    console.log(message.response);
+    if (!message) {
+        return;
+    }
+    if (message.type == GET_SERIES) {
+        series = message.data;
+    } else {
+        console.log(message);
+    }
 }
   
 /**
@@ -28,8 +40,9 @@ function handleError(error) {
  * Sends message to background script
  * @param {Object} data JSON object to send to backgroun
  */
-function notifyBackgroundPage(data) {
-    const sending = browser.runtime.sendMessage(data);
+function notifyBackgroundPage(type, data) {
+    const msg = {type: type, data: data};
+    const sending = browser.runtime.sendMessage(msg);
     sending.then(handleResponse, handleError);
 }
 
@@ -49,8 +62,9 @@ function handleNewPage() {
         const title = document.body.querySelector('h1');
         const titleText = title.outerText;
         if (isSeriesPage) {
-            series = titleText
-            series_cookie_name = series.replace(/\s/g, '').toLowerCase()
+            series = titleText;
+            notifyBackgroundPage(SET_SERIES, series);
+            series_cookie_name = series.replace(/\s/g, '').toLowerCase();
 
             // retrieve cookie if available
             let cookie = retrieveCRCookie(COOKIE_BASE_NAME);
@@ -64,9 +78,10 @@ function handleNewPage() {
             }
 
             // create popup
-            notifyBackgroundPage(cookie_value);
+            notifyBackgroundPage(CREATE_NOTIFICATION, cookie_value);
         }
         else if (isWatchPage) {
+            notifyBackgroundPage(GET_SERIES, "");
             if (!series) {
                 return;
             }
